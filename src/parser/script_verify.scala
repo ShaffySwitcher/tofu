@@ -1,7 +1,5 @@
 package tofu.parser
 
-import tofu.reader.findLineStart
-import tofu.variables.{readVariable_str_safe, readVariable_int_safe}
 import tofu.{debugMessage, debug_printSeq, closeTofu}
 import tofu.runner.conditionElements
 import tofu.variables.getVariableProperties
@@ -16,6 +14,7 @@ private def verifyCode(script: Seq[String], start_keyword: String, end_keyword: 
 def verifyFunctions(script: Seq[String]): Boolean = verifyCode(script, "function", "end")
 def verifyIfs(script: Seq[String]): Boolean = verifyCode(script, "if", "endif")
 def verifyWhile(script: Seq[String]): Boolean = verifyCode(script, "while", "endwhile")
+def verifyFor(script: Seq[String]): Boolean = verifyCode(script, "for", "endfor")
 
 private def verifyCondition(line: String, isIF: Boolean): Boolean =
   val start = if isIF then findLineStart(line, 2) else findLineStart(line, 5) //for while loops

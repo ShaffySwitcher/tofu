@@ -6,12 +6,17 @@ Tofu's specification contains a simple way to store information in memory to be 
 
 * **string** - For text variables, such as "tofu"
 * **int** - For numerical variables, such as 24
+* **array** - Stores multiple elements inside, can mix integers with strings
 
 ### Declaring variables
 * **string** - Declares a string value directly
 * **int** - Declares an integer value directly
 * **calcint** - Performs an arithmetic calculation and declares the result as an int
 * **readstr** - Reads user input and declares the input as a string
+* **array** - Creates a new array
+* **arradd** - Adds a new element to an array
+* **arrget** - Gets an element from an array and declares it as a variable
+* **arrlen** - Gets the length of an array and declares it as an integer variable
 
 Example:
 
@@ -86,7 +91,7 @@ You can use the keywords `exists` and `!exists` to check if a variable exists or
 
 ## Arithmetic calculations for integers
 
-With the instruction `calcint`, you can perform arithmetic calculations from left to right and assign the result as a variable which you can use later. The syntax is similar to `int`, as it requires a name and value to declare a variable, but the value is the result of the performed calculations.
+With the instruction `calcint`, you can perform arithmetic calculations and assign the result as a variable which you can use later. The syntax is similar to `int`, as it requires a name and value to declare a variable, but the value is the result of the performed calculations.
 
 Available operators:
 * `+`
@@ -116,3 +121,38 @@ print $variable1
 ```
 
 The value is determined by the user at runtime, but the name of the variable must be given.
+
+## Arrays
+
+With the instructions `array`, `arradd`, `arrget`, `arreplace` you can declare arrays as a container to multiple elements of integer or string value:
+
+```
+//Create a new array or replace if one named "info" already exists
+array info
+//Add an integer element of "45" to info
+arradd info, 45
+//Add a string element of "random text" to info
+arradd info, random text
+
+//Read the element 0 (the first element) from "info" and declare a new variable with its value
+arrget info, variable1, 0
+
+//Print variable1, which is an integer of value "45"
+print $variable1
+
+//Changes the value of the first element of "info", re-declares variable1 and prints the new value
+arreplace info, 500, 0
+arrget info, variable1, 0
+print $variable1
+```
+
+You can also obtain the length of an array with `arrlen`:
+
+```
+array emptyarray
+arrlen emptyarray, variable1
+
+print $variable1
+```
+
+This code obtains the length of the array `emptyarray` and declares it as an integer variable, then prints it. Since the array is created but no element is given to it, its length value is `0`.

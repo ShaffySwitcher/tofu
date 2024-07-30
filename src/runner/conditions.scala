@@ -3,25 +3,14 @@ package tofu.runner
 import tofu.{debugMessage, debug_printSeq}
 import tofu.variables.*
 import tofu.parser.*
-import tofu.reader.findLineStart
 
 import scala.sys.process.*
 import tofu.reader.readScript
 import tofu.closeTofu
 
-// def findEndIF(script: Seq[String], i: Int): Int =
-//   if i >= script.length then -1
-//   else if startsWith(script(i), "endif") then i
-//   else findEndIF(script, i+1)
-//
-// def findEndWhile(script: Seq[String], i: Int): Int =
-//   if i >= script.length then -1
-//   else if startsWith(script(i), "endwhile") then i
-//   else findEndWhile(script, i+1)
-
 def findEndIF(script: Seq[String], i: Int): Int = findBlockEnd(script, "if", "endif", i+1, 1)
-
 def findEndWhile(script: Seq[String], i: Int): Int = findBlockEnd(script, "while", "endwhile", i+1, 1)
+def findEndFor(script: Seq[String], i: Int): Int = findBlockEnd(script, "for", "endfor", i+1, 1)
 
 def checkCondition(line: String, isIF: Boolean): Boolean =
   val start = if isIF then findLineStart(line, 2) else findLineStart(line, 5) //for while loops
@@ -29,17 +18,16 @@ def checkCondition(line: String, isIF: Boolean): Boolean =
   elements.length match
     case 1 =>
       debugMessage("If statement has only 1 element, returning true if variable exists or is not a variable")
-      val variable = readVariable_class_safe(elements(0))
-      elements(0)(0) != '$' || variable.vartype != variable_type.none
+      VarReader(elements(0)).vartype != variable_type.none
     case 2 =>
       if elements(1) == "exists" then
-        readVariable_class_safe(elements(0)).vartype != variable_type.none
+        elements(0)(0) != '$' || VarReader(elements(0)).vartype != variable_type.none
       else if elements(1) == "!exists" then
-        readVariable_class_safe(elements(0)).vartype == variable_type.none
+        VarReader(elements(0)).vartype == variable_type.none
       else false
     case _ =>
-      val e0 = readVariable_class_safe(elements(0))
-      val e1 = readVariable_class_safe(elements(2))
+      val e0 = VarReader(elements(0))
+      val e1 = VarReader(elements(2))
       debugMessage(s"Running if statement: [element 0] ${elements(0)} [element 1] ${elements(2)} [operator] ${elements(1)}")
       val condition = elements(1) match
         case "==" => compare_str(e0, e1, true)
@@ -62,38 +50,38 @@ def conditionElements(line: String, i: Int, elements: Vector[String] = Vector(),
 private def addElement(x: Vector[String], y: String): Vector[String] =
   if y.length == 0 then x else x:+y
 
-private def compare_str_contains(e0: TofuVar, e1: TofuVar, equals: Boolean): Boolean =
+private def compare_str_contains(e0: VarReader, e1: VarReader, equals: Boolean): Boolean =
   val str0 =
-    if e0.vartype == variable_type.none then e0.input
+    if e0.vartype == variable_type.none then e0.raw_name
     else e0.valueToString()
 
   val str1 =
-    if e1.vartype == variable_type.none then e1.input
+    if e1.vartype == variable_type.none then e1.raw_name
     else e1.valueToString()
 
   if equals then str0.contains(str1)
   else !str0.contains(str1)
 
-private def compare_str(e0: TofuVar, e1: TofuVar, equals: Boolean): Boolean =
+private def compare_str(e0: VarReader, e1: VarReader, equals: Boolean): Boolean =
   val str0 =
-    if e0.vartype == variable_type.none then e0.input
+    if e0.vartype == variable_type.none then e0.raw_name
     else e0.valueToString()
 
   val str1 =
-    if e1.vartype == variable_type.none then e1.input
+    if e1.vartype == variable_type.none then e1.raw_name
     else e1.valueToString()
 
   if equals then str0 == str1
   else str0 != str1
 
-private def compare_int(e0: TofuVar, e1: TofuVar, operator: String): Boolean =
+private def compare_int(e0: VarReader, e1: VarReader, operator: String): Boolean =
   val int0 =
-    if e0.vartype == variable_type.none then condition_mkint(e0.input)
+    if e0.vartype == variable_type.none then condition_mkint(e0.raw_name)
     else if e0.vartype == variable_type.integer then
       e0.value_int
     else e0.valueToString().length
   val int1 =
-    if e1.vartype == variable_type.none then condition_mkint(e1.input)
+    if e1.vartype == variable_type.none then condition_mkint(e1.raw_name)
     else if e1.vartype == variable_type.integer then
       e1.value_int
     else e1.valueToString().length

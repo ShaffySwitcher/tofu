@@ -1,9 +1,13 @@
 package tofu.parser
 
-import tofu.reader.findLineStart
-import tofu.variables.{readVariable_str_safe, readVariable_int_safe}
+import tofu.variables.VarReader
 import tofu.{debugMessage, debug_printSeq}
 import tofu.closeTofu
+
+def findLineStart(line: String, i: Int = 0): Int =
+  if i >= line.length then -1
+  else if line(i) != ' ' && line(i) != '\t' then i
+  else findLineStart(line, i+1)
 
 def findInList(find: String, list: Seq[String], i: Int = 0): Int =
   if i >= list.length then -1
@@ -63,7 +67,7 @@ def mkstr(line: String, s_seq: Vector[String] = Vector(), arg: String = "", i: I
     mkstr(line, s_seq, arg + line(i), i+1, ignore_spaces)
 
 def parseString(line: String, start: Int): String =
-  val str = mkstr(line, i = start).map(x => readVariable_str_safe(x))
+  val str = mkstr(line, i = start).map(x => VarReader(x).valueToString())
   debug_printSeq(s"From the string:\n$line\nThe parsed sequence is:", str)
   mkstr_raw(str)
 
@@ -71,31 +75,17 @@ def parseString_raw(line: String, start: Int): String =
   val str = mkstr(line, i = start)
   debug_printSeq(s"From the string:\n$line\nThe parsed sequence is:", str)
   mkstr_raw(str)
-  
-def parseArrayDeclaration(line: String): String =
-  val start = findLineStart(line, 5)
-  getName(line, start)
 
-def parseArrayAddition(line: String): (String, Any) =
-  val start = findLineStart(line, 7)
-  val parts = line.substring(start).split(",").map(x => x.trim())
+def parseLocate(line: String): (Int, Int) =
+  val start = findLineStart(line, 6)
+  val parts = line.substring(start).split(",").map(_.trim)
   if parts.length != 2 then
-    closeTofu(s"Syntax error in array addition: $line\n\nThe array name and/or the new value to append are missing!")
+    closeTofu(s"Syntax error in locate: $line\n\nExpected format: locate x, y")
+  (parts(0).toInt, parts(1).toInt)
+
+def parseColor(line: String): (String, String) =
+  val start = findLineStart(line, 5)
+  val parts = line.substring(start).split(",").map(_.trim)
+  if parts.length != 2 then
+    closeTofu(s"Syntax error in color: $line\n\nExpected format: color text/background, color")
   (parts(0), parts(1))
-
-def parseArrayAccess(line: String): (String, String, Int) =
-  val start = findLineStart(line, 7)
-  val parts = line.substring(start).split(",").map(x => x.trim())
-  if parts.length != 3 then
-    closeTofu(s"Syntax error in array access: $line\n\nThe array name, variable and/or the new value to get are missing!")
-  (parts(0), parts(1), parts(2).toInt)
-
-def findBlockEnd(s: Seq[String], startk: String, endk: String, i: Int, count: Int): Int =
-  if i >= s.length then
-    if count == 0 then i else -1 //-1 must not happen!!!!!
-  else if count == 0 then i
-  else if startsWith_strict(s(i), startk) then
-    findBlockEnd(s, startk, endk, i+1, count+1)
-  else if startsWith_strict(s(i), endk) then
-    findBlockEnd(s, startk, endk, i+1, count-1)
-  else findBlockEnd(s, startk, endk, i+1, count)

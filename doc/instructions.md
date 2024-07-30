@@ -8,13 +8,21 @@ Tofu's language style is somewhat inspired by CPU architecture instruction sets.
 * int
 * calcint
 * readstr
-* print
+* array
+* arrget
+* arradd
+* arreplace
+* arrlen
 * call
 * return
 * exec
 * stop
 * sleep
 * break
+* print
+* clear
+* color
+* locate
 
 ## string
 
@@ -68,7 +76,7 @@ This will print "4235".
 
 ## calcint
 
-Performs arithmetic calculations from left to right and assigns the result as a variable
+Performs arithmetic calculations and assigns the result as a variable
 
 Example:
 
@@ -94,20 +102,42 @@ readstr variable1
 print $variable1
 ```
 
+## array, arrget, arradd, arreplace and arrlen
+
+You can declare arrays as a container to multiple elements of integer or string value:
+
+```
+//Create a new array or replace if one named "info" already exists
+array info
+//Add an integer element of "45" to info
+arradd info, 45
+//Add a string element of "random text" to info
+arradd info, random text
+
+//Read the element 0 (the first element) from "info" and declare a new variable with its value
+arrget info, variable1, 0
+
+//Print variable1, which is an integer of value "45"
+print $variable1
+
+//Changes the value of the first element of "info", re-declares variable1 and prints the new value
+arreplace info, 500, 0
+arrget info, variable1, 0
+print $variable1
+```
+
+You can also obtain the length of an array with `arrlen`:
+
+```
+array emptyarray
+arrlen emptyarray, variable1
+
+print $variable1
+```
+
+This code obtains the length of the array `emptyarray` and declares it as an integer variable, then prints it. Since the array is created but no element is given to it, its length value is `0`.
+
 The value is determined by the user at runtime, but the name of the variable must be given.
-
-## print
-
-`print` prints a message to the terminal output. It follows the syntax `print MESSAGE`. The message can be infinite in length as long as it remains all in one line. You can read variables and pass them to the message.
-
-Example:
-
-```
-set food, tofu
-
-print I really love $food
-```
-This will print "I really love tofu"
 
 ## call
 
@@ -202,3 +232,45 @@ while $c < 3
 endwhile
 ```
 Only one instance of this loop runs because the keyword `break` cancels futher executions, including any lines inside the loop block that are below it.
+
+## print
+
+`print` prints a message to the terminal output. It follows the syntax `print MESSAGE`. The message can be infinite in length as long as it remains all in one line. You can read variables and pass them to the message.
+
+Example:
+
+```
+set food, tofu
+
+print I really love $food
+```
+This will print "I really love tofu"
+
+## clear, color and locate
+
+You can use `clear` to clear the terminal screen and line history:
+
+```
+print Some text
+print More text
+print Even more text
+clear
+print It's clean!
+```
+
+You can use `color` to define the foreground and background colors in your terminal:
+
+```
+color background, red
+color text, green
+
+print This text is green on top of a red background!
+```
+
+You can use `locate` to offset the next print message by X and Y lines/characters:
+
+```
+locate 20,7
+
+print This message is 20 lines lower and 7 characters to the right!
+```
